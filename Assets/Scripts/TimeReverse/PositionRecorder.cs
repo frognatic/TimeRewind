@@ -4,34 +4,10 @@ using UnityEngine;
 public class PositionRecorder : TimeRecorder
 {
     public List<Vector3> recorderPositions = new();
+    
+    protected override void RestoreAction(int frame) => transform.position = recorderPositions[frame];
 
-    public override bool Finished { get; protected set; }
+    protected override void StartRecordingAction() => recorderPositions.Clear();
 
-    public override void RestoreFrame(int frame)
-    {
-        Debug.LogWarning($"Count: {recorderPositions.Count}");
-        if (frame >= 0)
-            transform.position = recorderPositions[frame];
-        else
-            StopRestoring();
-    }
-
-    protected override void StopRestoring() => Finished = true;
-
-    public override void StartRecording()
-    {
-        recorderPositions.Clear();
-        Finished = false;
-    }
-
-    public override void StopRecording()
-    {
-        
-    }
-
-    protected override void Record()
-    {
-        if (TimeReverseController.Instance.IsRecording)
-            recorderPositions.Add(transform.position);
-    }
+    protected override void RecordingAction() => recorderPositions.Add(transform.position);
 }

@@ -1,86 +1,94 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 
-public class TimeReverseController : MonoBehaviour
+public class TimeReverseController : MonoSingleton<TimeReverseController>
 {
-    public static TimeReverseController Instance;
+    public static event Action<int> OnFrameUpdateAction;
     
     private List<TimeRecorder> recorders;
 
-    private float rewindSpeed = 0.25f;
+    private int recordedFrames;
+    private float rewindFrames;
+
+    public float RewindSpeed => 2f;
+
+    private bool areFramesRecording;
+    private bool isRewinding;
     
-    private int savedFrames;
-    private float recordedFrames;
-    
-    public bool IsRecording { get; private set; }
-    public bool IsPlaying { get; private set; }
-    
-    private void Awake()
-    {
-        Instance = this;
-        FillRecorders();
-    }
+    private void Awake() => FillRecorders();
 
     private void FillRecorders() => recorders = GetComponentsInChildren<TimeRecorder>().ToList();
 
-    public void StartRecording()
-    {
-        savedFrames = 0;
-        IsRecording = true;
-        recorders.ForEach(x => x.StartRecording());
-    }
-
-    public void StopRecording()
-    {
-        IsRecording = false;
-        recordedFrames = savedFrames;
-        
-        recorders.ForEach(x => x.StopRecording());
-    }
-    
-    public void StartPlaying()
-    {
-        IsPlaying = true;
-    }
-
-    public void StopPlaying()
-    {
-        IsPlaying = false;
-    }
-
     private void Update()
     {
-        IncreaseFramesCounter();
-        ReplayFrames();
+        RecordFrames();
+        RewindFrames();
     }
 
-    private void IncreaseFramesCounter()
+    private void RecordFrames()
     {
-        if (IsRecording) 
-            savedFrames++;
+        if (areFramesRecording)
+            IncreaseFrames();
     }
-    
-    private void ReplayFrames()
+
+    private void IncreaseFrames()
     {
-        if (IsPlaying) 
-            RestoreFrames();
+        recordedFrames++;
+        OnFrameUpdateAction?.Invoke(recordedFrames);
     }
-    
-    private void RestoreFrames()
+
+    private void RewindFrames()
     {
-        if (AreRecordsFinished) return;
+        if (!isRewinding) return;
         
+        RestoredFrames();
+        DecreaseFramesToRewindBySpeed();
+    }
+
+    private void RestoredFrames()
+    {
         foreach (TimeRecorder recorder in recorders)
         {
-            int frames = (int)(recordedFrames - 1);
-            Debug.LogWarning($"Frames: {frames} finished? {AreRecordsFinished}");
+            int frames = (int)(rewindFrames - 1);
             recorder.RestoreFrame(frames);
         }
-
-        Debug.LogWarning($"Decrease frames");
-        recordedFrames -= rewindSpeed;
     }
 
-    private bool AreRecordsFinished => recorders.TrueForAll(x => x.Finished);
+    private void DecreaseFramesToRewindBySpeed() => rewindFrames -= RewindSpeed;
+
+    #region UI Calls
+
+    public void StartRecording()
+    {
+        recorders.ForEach(x => x.StartRecording());
+        ResetRecordingStatus();
+    }
+
+    private void ResetRecordingStatus()
+    {
+        areFramesRecording = true;
+        rewindFrames = 0;
+        recordedFrames = 0;
+    }
+    
+    public void StopRecording()
+    {
+        recorders.ForEach(x => x.StopRecording());
+        areFramesRecording = false;
+    }
+
+    public void StartRewind()
+    {
+        isRewinding = true;
+
+        rewindFrames = recordedFrames;
+    }
+
+    public void StopRewind()
+    {
+        isRewinding = false;
+    }
+
+    #endregion
 }
