@@ -2,93 +2,127 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-public class TimeReverseController : MonoSingleton<TimeReverseController>
+namespace TimeReverse
 {
-    public static event Action<int> OnFrameUpdateAction;
+    public class TimeReverseController : MonoSingleton<TimeReverseController>
+    {
+        public static event Action<int> OnFrameUpdateAction;
     
-    private List<TimeRecorder> recorders;
+        private List<TimeRecorder> timeRecorders = new();
 
-    private int recordedFrames;
-    private float rewindFrames;
+        private int recordedFrames;
+        private float rewindFrames;
 
-    public float RewindSpeed => 2f;
+        public float RewindSpeed { get; private set; } = 1f;
 
-    private bool areFramesRecording;
-    private bool isRewinding;
+        private bool isRecording;
+        private bool isRewinding;
     
-    private void Awake() => FillRecorders();
-
-    private void FillRecorders() => recorders = GetComponentsInChildren<TimeRecorder>().ToList();
-
-    private void Update()
-    {
-        RecordFrames();
-        RewindFrames();
-    }
-
-    private void RecordFrames()
-    {
-        if (areFramesRecording)
-            IncreaseFrames();
-    }
-
-    private void IncreaseFrames()
-    {
-        recordedFrames++;
-        OnFrameUpdateAction?.Invoke(recordedFrames);
-    }
-
-    private void RewindFrames()
-    {
-        if (!isRewinding) return;
-        
-        RestoredFrames();
-        DecreaseFramesToRewindBySpeed();
-    }
-
-    private void RestoredFrames()
-    {
-        foreach (TimeRecorder recorder in recorders)
+        private void Start()
         {
-            int frames = (int)(rewindFrames - 1);
-            recorder.RestoreFrame(frames);
+            FillRecorders();
+            InitRecorders();
         }
-    }
 
-    private void DecreaseFramesToRewindBySpeed() => rewindFrames -= RewindSpeed;
+        private void FillRecorders() => timeRecorders = GetComponentsInChildren<TimeRecorder>().ToList();
 
-    #region UI Calls
+        private void InitRecorders()
+        {
+            foreach (ITimeInitializer initializer in timeRecorders) 
+                initializer.Initialize();
+        }
 
-    public void StartRecording()
-    {
-        recorders.ForEach(x => x.StartRecording());
-        ResetRecordingStatus();
-    }
+        private void Update()
+        {
+            TryRecordFrames();
+            TryRewindFrames();
+        }
 
-    private void ResetRecordingStatus()
-    {
-        areFramesRecording = true;
-        rewindFrames = 0;
-        recordedFrames = 0;
-    }
+        private void TryRecordFrames()
+        {
+            if (!isRecording) return;
+        
+            IncreaseFrames();
+            RecordFrames();
+        }
+
+        private void IncreaseFrames()
+        {
+            recordedFrames++;
+            OnFrameUpdateAction?.Invoke(recordedFrames);
+        }
+
+        private void RecordFrames()
+        {
+            foreach (ITimeRecorder recorder in timeRecorders) 
+                recorder.Record();
+        }
+
+        private void TryRewindFrames()
+        {
+            if (!isRewinding || IsRewindFinished()) return;
+        
+            RestoredFrames();
+            DecreaseFramesToRewindBySpeed();
+        }
+
+        private bool IsRewindFinished() => rewindFrames <= 0;
     
-    public void StopRecording()
-    {
-        recorders.ForEach(x => x.StopRecording());
-        areFramesRecording = false;
+        private void RestoredFrames()
+        {
+            foreach (ITimeRewinder recorder in timeRecorders)
+            {
+                int frames = (int)(rewindFrames - 1);
+                recorder.RewindFrame(frames);
+            }
+        }
+
+        private void DecreaseFramesToRewindBySpeed() => rewindFrames -= Instance.RewindSpeed;
+
+        #region UI Calls
+
+        public void StartRecording()
+        {
+            foreach (ITimeRecorder recorder in timeRecorders) 
+                recorder.StartRecording();
+
+            ResetRecordingStatus();
+        }
+
+        private void ResetRecordingStatus()
+        {
+            isRecording = true;
+            rewindFrames = 0;
+            recordedFrames = 0;
+        }
+    
+        public void StopRecording()
+        {
+            foreach (ITimeRecorder recorder in timeRecorders) 
+                recorder.StopRecording();
+        
+            isRecording = false;
+        }
+
+        public void StartRewind()
+        {
+            foreach (ITimeRewinder rewinder in timeRecorders) 
+                rewinder.StartRewind();
+        
+            isRewinding = true;
+            rewindFrames = recordedFrames;
+        }
+
+        public void StopRewind()
+        {
+            foreach (ITimeRewinder rewinder in timeRecorders) 
+                rewinder.PauseRewind();
+        
+            isRewinding = false;
+        }
+
+        public void SetRewindSpeed(float speedToSet) => RewindSpeed = speedToSet;
+
+        #endregion
     }
-
-    public void StartRewind()
-    {
-        isRewinding = true;
-
-        rewindFrames = recordedFrames;
-    }
-
-    public void StopRewind()
-    {
-        isRewinding = false;
-    }
-
-    #endregion
 }

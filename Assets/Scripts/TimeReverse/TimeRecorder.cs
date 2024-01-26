@@ -1,42 +1,67 @@
 using UnityEngine;
 
-public abstract class TimeRecorder : MonoBehaviour
+namespace TimeReverse
 {
-    private bool restoringFinished;
-    private bool recordingFinished;
-    
-    protected void Update() => Record();
-
-    private void Record()
+    public abstract class TimeRecorder : MonoBehaviour, ITimeRecorder, ITimeRewinder, ITimeInitializer
     {
-        if (recordingFinished)
-            RecordingAction();
-    }
+        private bool recordingFinished;
+
+        #region ITimeInitializer
+
+        public void Initialize() => InitializeAction();
+
+        #endregion
+        
+        #region ITimeRecorder
+
+        public void Record()
+        {
+            if (recordingFinished)
+                RecordingAction();
+        }
     
-    public void StartRecording()
-    {
-        StartRecordingAction();
-        restoringFinished = false;
-        recordingFinished = true;
-    }
+        public void StartRecording()
+        {
+            StartRecordingAction();
+            recordingFinished = true;
+        }
     
-    public void StopRecording() => recordingFinished = false;
+        public void StopRecording()
+        {
+            StopRecordingAction();
+            recordingFinished = false;
+        }
+
+        #endregion
+
+        #region ITimeRewinder
+
+        public void StartRewind() => StartRewindAction();
+
+        public void RewindFrame(int frame)
+        {
+            if (frame >= 0)
+                RewindAction(frame);
+            else
+                StopRewindAction();
+        }
+
+        public void PauseRewind() {}
+
+        #endregion
     
-    public void RestoreFrame(int frame)
-    {
-        if (frame >= 0)
-            RestoreAction(frame);
-        else
-            StopRestoring();
+        #region To implement by specified recorder
+
+        protected abstract void InitializeAction();
+        
+        protected abstract void StartRecordingAction();
+        protected abstract void RecordingAction();
+        protected abstract void StopRecordingAction();
+
+        protected abstract void StartRewindAction();
+        protected abstract void RewindAction(int frame);
+        protected abstract void StopRewindAction();
+
+        #endregion
     }
-
-    private void StopRestoring() => restoringFinished = true;
-
-    #region To implement by specified recorder
-
-    protected abstract void RecordingAction();
-    protected abstract void StartRecordingAction();
-    protected abstract void RestoreAction(int frame);
-
-    #endregion
 }
