@@ -1,32 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 
 namespace TimeReverse
 {
-    [Serializable]
     public class FrameContainer<T>
     {
-        public List<FrameContainerData<T>> containerDataList = new();
-
-        private int counter;
-        private int savedFrame;
+        private readonly List<FrameContainerData<T>> containerDataList = new();
 
         private FrameContainerData<T> currentElement;
-
+        private int counter;
+        
         public void Reset()
         {
             containerDataList.Clear();
             counter = 0;
-            savedFrame = 0;
         }
 
-        public void Start()
-        {
-            currentElement = GetLastElement();
-            savedFrame = currentElement.Frame;
-        }
+        public void StartRewindAction() => currentElement = GetLastElement();
 
         public void Record(int frame, T element)
         {
@@ -61,7 +52,6 @@ namespace TimeReverse
                 if (containerDataList[i].Frame - 1 != frame) 
                     continue;
                 
-                savedFrame = frame;
                 currentElement = containerDataList[i];
                 break;
             }

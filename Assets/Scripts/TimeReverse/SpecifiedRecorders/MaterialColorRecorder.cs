@@ -4,7 +4,7 @@ namespace TimeReverse.SpecifiedRecorders
 {
     public class MaterialColorRecorder : TimeRecorder
     {
-        public FrameContainer<Color> colorsRecorder = new();
+        private readonly FrameContainer<Color> colorsRecorder = new();
         private IMaterialColor materialColor;
 
         protected override void InitializeAction() => materialColor = GetComponent<IMaterialColor>();
@@ -15,7 +15,7 @@ namespace TimeReverse.SpecifiedRecorders
 
         protected override void StopRecordingAction() {}
 
-        protected override void StartRewindAction() => colorsRecorder.Start();
+        protected override void StartRewindAction() => colorsRecorder.StartRewindAction();
 
         protected override void RewindAction(int frame)
         {
