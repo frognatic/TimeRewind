@@ -1,26 +1,25 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace TimeReverse.SpecifiedRecorders
 {
     public class MaterialColorRecorder : TimeRecorder
     {
-        private readonly List<Color> recordedColors = new();
+        public FrameContainer<Color> colorsRecorder = new();
         private IMaterialColor materialColor;
 
         protected override void InitializeAction() => materialColor = GetComponent<IMaterialColor>();
 
-        protected override void StartRecordingAction() => recordedColors.Clear();
+        protected override void StartRecordingAction() => colorsRecorder.Reset();
 
-        protected override void RecordingAction() => recordedColors.Add(materialColor.GetMaterialColor());
+        protected override void RecordingAction(int frame) => colorsRecorder.Record(frame, materialColor.GetMaterialColor());
 
         protected override void StopRecordingAction() {}
 
-        protected override void StartRewindAction() {}
+        protected override void StartRewindAction() => colorsRecorder.Start();
 
         protected override void RewindAction(int frame)
         {
-            Color colorToSet = recordedColors[frame];
+            Color colorToSet = colorsRecorder.GetRewind(frame);
             materialColor.SetMaterialColor(colorToSet);
         }
 

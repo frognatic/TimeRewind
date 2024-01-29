@@ -1,3 +1,5 @@
+using System;
+using TimeReverse.SpecifiedRecorders;
 using UnityEngine;
 
 namespace TimeReverse
@@ -5,7 +7,7 @@ namespace TimeReverse
     public abstract class TimeRecorder : MonoBehaviour, ITimeRecorder, ITimeRewinder, ITimeInitializer
     {
         private bool recordingFinished;
-
+        
         #region ITimeInitializer
 
         public void Initialize() => InitializeAction();
@@ -14,10 +16,10 @@ namespace TimeReverse
         
         #region ITimeRecorder
 
-        public void Record()
+        public void Record(int frame)
         {
             if (recordingFinished)
-                RecordingAction();
+                RecordingAction(frame);
         }
     
         public void StartRecording()
@@ -55,7 +57,7 @@ namespace TimeReverse
         protected abstract void InitializeAction();
         
         protected abstract void StartRecordingAction();
-        protected abstract void RecordingAction();
+        protected abstract void RecordingAction(int frame);
         protected abstract void StopRecordingAction();
 
         protected abstract void StartRewindAction();

@@ -55,7 +55,7 @@ namespace TimeReverse
         private void RecordFrames()
         {
             foreach (ITimeRecorder recorder in timeRecorders) 
-                recorder.Record();
+                recorder.Record(recordedFrames);
         }
 
         private void TryRewindFrames()

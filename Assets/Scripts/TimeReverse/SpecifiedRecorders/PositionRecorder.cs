@@ -1,20 +1,26 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace TimeReverse.SpecifiedRecorders
 {
     public class PositionRecorder : TimeRecorder
     {
-        private readonly List<Vector3> recordedPositions = new();
+        private readonly FrameContainer<Vector3> positionsRecorder = new();
 
         protected override void InitializeAction() {}
 
-        protected override void StartRecordingAction() => recordedPositions.Clear();
-        protected override void RecordingAction() => recordedPositions.Add(transform.position);
+        protected override void StartRecordingAction() => positionsRecorder.Reset();
+
+        protected override void RecordingAction(int frame) => positionsRecorder.Record(frame, transform.position);
+
         protected override void StopRecordingAction() {}
         
-        protected override void StartRewindAction() {}
-        protected override void RewindAction(int frame) => transform.position = recordedPositions[frame];
+        protected override void StartRewindAction() => positionsRecorder.Start();
+        protected override void RewindAction(int frame)
+        {
+            Vector3 getRewind = positionsRecorder.GetRewind(frame);
+            transform.position = getRewind;
+        }
+
         protected override void StopRewindAction() {}
     }
 }

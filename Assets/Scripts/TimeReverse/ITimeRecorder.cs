@@ -3,7 +3,7 @@ namespace TimeReverse
     public interface ITimeRecorder
     {
         public void StartRecording();
-        public void Record();
+        public void Record(int frame);
         public void StopRecording();
     }
 }
