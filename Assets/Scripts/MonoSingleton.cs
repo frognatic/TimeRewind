@@ -7,7 +7,7 @@ public abstract class MonoSingleton<T> : MonoBehaviour where T : MonoSingleton<T
         get
         {
             if (!instance)
-                Create();
+                FindInstance();
             return instance;
         }
     }
@@ -21,5 +21,13 @@ public abstract class MonoSingleton<T> : MonoBehaviour where T : MonoSingleton<T
 
         var go = new GameObject(typeof(T).Name);
         instance = go.AddComponent<T>();
+    }
+
+    private static void FindInstance()
+    {
+        if (instance)
+            return;
+
+        instance = FindObjectOfType<T>();
     }
 }

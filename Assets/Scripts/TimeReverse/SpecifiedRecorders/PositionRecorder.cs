@@ -15,9 +15,9 @@ namespace TimeReverse.SpecifiedRecorders
         protected override void StopRecordingAction() {}
         
         protected override void StartRewindAction() => positionsRecorder.StartRewindAction();
-        protected override void RewindAction(int frame)
+        protected override void RewindAction(int frame, bool frameByFrame)
         {
-            Vector3 getRewind = positionsRecorder.GetRewind(frame);
+            Vector3 getRewind = positionsRecorder.GetRewind(frame, frameByFrame);
             transform.position = getRewind;
         }
 

@@ -1,6 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 namespace TimeReverse
 {
@@ -9,6 +9,7 @@ namespace TimeReverse
         private readonly List<FrameContainerData<T>> containerDataList = new();
 
         private FrameContainerData<T> currentElement;
+        private FrameContainerData<T> currentFrameByFrameElement;
         private int counter;
         
         public void Reset()
@@ -17,7 +18,11 @@ namespace TimeReverse
             counter = 0;
         }
 
-        public void StartRewindAction() => currentElement = GetLastElement();
+        public void StartRewindAction()
+        {
+            currentElement = GetLastElement();
+            currentFrameByFrameElement = GetLastElement();
+        }
 
         public void Record(int frame, T element)
         {
@@ -45,7 +50,9 @@ namespace TimeReverse
             }
         }
 
-        public T GetRewind(int frame)
+        public T GetRewind(int frame, bool frameByFrame) => frameByFrame ? GetRewindFrameByFrame(frame) : GetRewind(frame);
+
+        private T GetRewind(int frame)
         {
             for (int i = containerDataList.Count - 1; i >= 0; i--)
             {
@@ -58,24 +65,22 @@ namespace TimeReverse
             return currentElement.ContainerElement;
         }
 
-        private FrameContainerData<T> GetLastElement() => containerDataList.Last();
-    }
-
-    [Serializable]
-    public struct FrameContainerData<T>
-    {
-        public int Id { get; private set; }
-        public int Frame { get; private set; }
-        public T ContainerElement { get; private set; }
-
-        public FrameContainerData(int id, int frame, T containerElement)
+        private T GetRewindFrameByFrame(int frame)
         {
-            Id = id;
-            Frame = frame;
-            ContainerElement = containerElement;
+            int distanceByFrame = containerDataList.Count;
+            for (int i = containerDataList.Count - 1; i >= 0; i--)
+            {
+                int distanceByFrameTemp = Mathf.Abs(containerDataList[i].Frame - frame);
+
+                if (distanceByFrameTemp > distanceByFrame) continue;
+                
+                distanceByFrame = distanceByFrameTemp;
+                currentFrameByFrameElement = containerDataList[i];
+
+            }
+            return currentFrameByFrameElement.ContainerElement;
         }
 
-        public void SetFrame(int frame) => Frame = frame;
-        public void SetContainerElement(T containerElement) => ContainerElement = containerElement;
+        private FrameContainerData<T> GetLastElement() => containerDataList.Last();
     }
 }

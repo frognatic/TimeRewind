@@ -1,18 +1,21 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 namespace TimeReverse
 {
     public class TimeReverseController : MonoSingleton<TimeReverseController>
     {
         public static event Action<int> OnFrameUpdateAction;
+        public static event Action OnStopRecording;
     
         private List<TimeRecorder> timeRecorders = new();
 
         private int recordedFrames;
         private float rewindFrames;
 
+        public int RecordedFrames => recordedFrames;
         public float RewindSpeed { get; private set; } = 1f;
 
         private bool isRecording;
@@ -77,7 +80,13 @@ namespace TimeReverse
             }
         }
 
-        private void DecreaseFramesToRewindBySpeed() => rewindFrames -= Instance.RewindSpeed;
+        public void SetToFrame(int frame)
+        {
+            foreach (ITimeRewinder recorder in timeRecorders) 
+                recorder.RewindFrame(frame, frameByFrame: true);
+        }
+
+        private void DecreaseFramesToRewindBySpeed() => rewindFrames -= RewindSpeed;
 
         #region UI Calls
 
@@ -102,6 +111,8 @@ namespace TimeReverse
                 recorder.StopRecording();
         
             isRecording = false;
+            
+            OnStopRecording?.Invoke();
         }
 
         public void StartRewind()

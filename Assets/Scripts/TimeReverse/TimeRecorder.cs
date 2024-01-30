@@ -40,10 +40,10 @@ namespace TimeReverse
 
         public void StartRewind() => StartRewindAction();
 
-        public void RewindFrame(int frame)
+        public void RewindFrame(int frame, bool frameByFrame)
         {
             if (frame >= 0)
-                RewindAction(frame);
+                RewindAction(frame, frameByFrame);
             else
                 StopRewindAction();
         }
@@ -61,7 +61,7 @@ namespace TimeReverse
         protected abstract void StopRecordingAction();
 
         protected abstract void StartRewindAction();
-        protected abstract void RewindAction(int frame);
+        protected abstract void RewindAction(int frame, bool frameByFrame);
         protected abstract void StopRewindAction();
 
         #endregion

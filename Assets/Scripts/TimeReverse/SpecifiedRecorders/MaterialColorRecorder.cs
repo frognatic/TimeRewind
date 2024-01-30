@@ -17,9 +17,9 @@ namespace TimeReverse.SpecifiedRecorders
 
         protected override void StartRewindAction() => colorsRecorder.StartRewindAction();
 
-        protected override void RewindAction(int frame)
+        protected override void RewindAction(int frame, bool frameByFrame)
         {
-            Color colorToSet = colorsRecorder.GetRewind(frame);
+            Color colorToSet = colorsRecorder.GetRewind(frame, frameByFrame);
             materialColor.SetMaterialColor(colorToSet);
         }
 
