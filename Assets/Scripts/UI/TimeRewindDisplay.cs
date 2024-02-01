@@ -1,4 +1,3 @@
-using System;
 using TimeReverse;
 using TMPro;
 using UnityEngine;
@@ -9,7 +8,6 @@ namespace UI
     public class TimeRewindDisplay : MonoBehaviour
     {
         [SerializeField] private TextMeshProUGUI frameCounterText;
-        [SerializeField] private TextMeshProUGUI rewindSpeedText;
 
         [SerializeField] private Slider timelineSlider;
     
@@ -17,6 +15,7 @@ namespace UI
         {
             TimeReverseController.OnFrameUpdateAction += OnFrameUpdateAction;
             TimeReverseController.OnStopRecording += SetupSlider;
+            TimeReverseController.OnFrameRewindAction += DisplayFrameAndRefreshSlider;
             
             timelineSlider.onValueChanged.AddListener(SliderValueChange);
         }
@@ -25,24 +24,12 @@ namespace UI
         {
             TimeReverseController.OnFrameUpdateAction -= OnFrameUpdateAction;
             TimeReverseController.OnStopRecording -= SetupSlider;
+            TimeReverseController.OnFrameRewindAction -= DisplayFrameAndRefreshSlider;
         }
-
-        private void Start()
-        {
-            float rewindSpeed = TimeReverseController.Instance.RewindSpeed;
-            SetRewindSpeedText(rewindSpeed);
-        }
-
-        private void SetRewindSpeedText(float rewindSpeed) =>
-            rewindSpeedText.text = $"Rewind speed x{rewindSpeed}";
 
         private void OnFrameUpdateAction(int frameCounter) => frameCounterText.text = $"Frame: {frameCounter}";
 
-        public void SetRewindSpeed(float rewindSpeedToSet)
-        {
-            TimeReverseController.Instance.SetRewindSpeed(rewindSpeedToSet);
-            SetRewindSpeedText(rewindSpeedToSet);
-        }
+        
 
         private void SetupSlider()
         {
@@ -53,5 +40,14 @@ namespace UI
         }
 
         private void SliderValueChange(float value) => TimeReverseController.Instance.SetToFrame((int)value);
+
+        private void DisplayFrameAndRefreshSlider(int currentFrame, int totalFrame)
+        {
+            DisplayFrame(currentFrame, totalFrame);
+            SetSliderValue(currentFrame);
+        }
+        
+        private void DisplayFrame(int currentFrame, int totalFrame) => frameCounterText.text = $"Frames: {currentFrame + 1}/{totalFrame}";
+        private void SetSliderValue(int value) => timelineSlider.value = value;
     }
 }

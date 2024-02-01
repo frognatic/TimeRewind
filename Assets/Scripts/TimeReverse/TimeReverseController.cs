@@ -8,15 +8,17 @@ namespace TimeReverse
     public class TimeReverseController : MonoSingleton<TimeReverseController>
     {
         public static event Action<int> OnFrameUpdateAction;
+        public static event Action<int, int> OnFrameRewindAction;
         public static event Action OnStopRecording;
     
         private List<TimeRecorder> timeRecorders = new();
 
-        private int recordedFrames;
         private float rewindFrames;
+        private int currentFrame;
 
-        public int RecordedFrames => recordedFrames;
-        public float RewindSpeed { get; private set; } = 1f;
+        public int RecordedFrames { get; private set; }
+
+        private float RewindSpeed { get; set; } = 1f;
 
         private bool isRecording;
         private bool isRewinding;
@@ -51,14 +53,14 @@ namespace TimeReverse
 
         private void IncreaseFrames()
         {
-            recordedFrames++;
-            OnFrameUpdateAction?.Invoke(recordedFrames);
+            RecordedFrames++;
+            OnFrameUpdateAction?.Invoke(RecordedFrames);
         }
 
         private void RecordFrames()
         {
             foreach (ITimeRecorder recorder in timeRecorders) 
-                recorder.Record(recordedFrames);
+                recorder.Record(RecordedFrames);
         }
 
         private void TryRewindFrames()
@@ -73,24 +75,37 @@ namespace TimeReverse
     
         private void RestoredFrames()
         {
-            foreach (ITimeRewinder recorder in timeRecorders)
-            {
-                int frames = (int)(rewindFrames - 1);
+            int frames = GetAllRewindFrames;
+            
+            foreach (ITimeRewinder recorder in timeRecorders) 
                 recorder.RewindFrame(frames);
-            }
+
+            OnFrameRewindAction?.Invoke(frames, RecordedFrames);
         }
 
         public void SetToFrame(int frame)
         {
             foreach (ITimeRewinder recorder in timeRecorders) 
                 recorder.RewindFrame(frame, frameByFrame: true);
+
+            currentFrame = frame;
+            
+            OnFrameRewindAction?.Invoke(frame, RecordedFrames);
         }
 
         private void DecreaseFramesToRewindBySpeed() => rewindFrames -= RewindSpeed;
 
         #region UI Calls
 
-        public void StartRecording()
+        public void Record()
+        {
+            if (isRecording) 
+                StopRecording();
+            else
+                StartRecording();
+        }
+        
+        private void StartRecording()
         {
             foreach (ITimeRecorder recorder in timeRecorders) 
                 recorder.StartRecording();
@@ -102,18 +117,41 @@ namespace TimeReverse
         {
             isRecording = true;
             rewindFrames = 0;
-            recordedFrames = 0;
+            RecordedFrames = 0;
         }
     
-        public void StopRecording()
+        private void StopRecording()
         {
             foreach (ITimeRecorder recorder in timeRecorders) 
                 recorder.StopRecording();
         
             isRecording = false;
+            currentFrame = GetAllRewindFrames;
             
             OnStopRecording?.Invoke();
         }
+
+        public void GoToFirstFrame() => SetToFrame(0);
+
+        public void GoToLastFrame()
+        {
+            int frames = RecordedFrames;
+            SetToFrame(frames);
+        }
+
+        public void GoToPreviousFrame()
+        {
+            currentFrame--;
+            SetToFrame(ClampRecordedFrame(currentFrame));
+        }
+
+        public void GoToNextFrame()
+        {
+            currentFrame++;
+            SetToFrame(ClampRecordedFrame(currentFrame));
+        }
+
+        private int ClampRecordedFrame(int frame) => Mathf.Clamp(frame, 0, RecordedFrames - 1);
 
         public void StartRewind()
         {
@@ -121,7 +159,7 @@ namespace TimeReverse
                 rewinder.StartRewind();
         
             isRewinding = true;
-            rewindFrames = recordedFrames;
+            rewindFrames = RecordedFrames;
         }
 
         public void StopRewind()
@@ -133,6 +171,7 @@ namespace TimeReverse
         }
 
         public void SetRewindSpeed(float speedToSet) => RewindSpeed = speedToSet;
+        private int GetAllRewindFrames => (int)(rewindFrames - 1);
 
         #endregion
     }
