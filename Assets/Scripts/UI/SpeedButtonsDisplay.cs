@@ -19,6 +19,11 @@ namespace UI
         private void InitSpeedButtons()
         {
             Clear();
+            CreateSpeedButtons();
+        }
+
+        private void CreateSpeedButtons()
+        {
             foreach (ISpeedData speedData in speedDataList)
             {
                 SpeedButton speedButton = Instantiate(speedButtonPrefab, speedButtonsContent);

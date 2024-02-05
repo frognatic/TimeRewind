@@ -19,11 +19,10 @@ public class PlayerMaterialColorChanger : MonoBehaviour, IMaterialColor
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            currentColor = GetRandomColor();
-            SetMaterialColor(currentColor);
-        }
+        if (!Input.GetKeyDown(KeyCode.Space)) return;
+        
+        currentColor = GetRandomColor();
+        SetMaterialColor(currentColor);
     }
     
     private Color GetRandomColor() => Random.ColorHSV(0f, 1f, 1f, 1f, 0.5f, 1f);

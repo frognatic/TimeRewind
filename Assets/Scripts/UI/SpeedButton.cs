@@ -7,6 +7,7 @@ namespace UI
 {
     public class SpeedButton : MonoBehaviour
     {
+        [Header("Button settings")]
         [SerializeField] private Image buttonBackgroundImage;
         [SerializeField] private TextMeshProUGUI speedText;
 
@@ -17,18 +18,22 @@ namespace UI
         private SpeedButtonsDisplay speedButtonsDisplay;
         private ISpeedData speedData;
 
-        public void Init(SpeedButtonsDisplay speedButtonsDisplay, ISpeedData speedData)
-        {
-            this.speedButtonsDisplay = speedButtonsDisplay;
-            this.speedData = speedData;
+        private const float DefaultSpeedValue = 1f;
 
-            if (speedData.RewindSpeed == 1f)
+        public void Init(SpeedButtonsDisplay speedDisplay, ISpeedData speedDataElement)
+        {
+            speedButtonsDisplay = speedDisplay;
+            speedData = speedDataElement;
+
+            if (HasDefaultSpeed())
                 Select();
             else
                 Deselect();
 
             SetSpeedText();
         }
+
+        private bool HasDefaultSpeed() => speedData.RewindSpeed == DefaultSpeedValue;
         
         public void Select()
         {

@@ -1,5 +1,3 @@
-using System;
-using TimeReverse.SpecifiedRecorders;
 using UnityEngine;
 
 namespace TimeReverse
@@ -52,7 +50,7 @@ namespace TimeReverse
 
         #endregion
     
-        #region To implement by specified recorder
+        #region To override by specified recorder
 
         protected abstract void InitializeAction();
         

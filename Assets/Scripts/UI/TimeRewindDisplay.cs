@@ -28,9 +28,7 @@ namespace UI
         }
 
         private void OnFrameUpdateAction(int frameCounter) => frameCounterText.text = $"Frame: {frameCounter}";
-
         
-
         private void SetupSlider()
         {
             timelineSlider.minValue = 0;

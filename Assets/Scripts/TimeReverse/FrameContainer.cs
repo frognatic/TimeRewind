@@ -26,28 +26,33 @@ namespace TimeReverse
 
         public void Record(int frame, T element)
         {
-            if (containerDataList.Count == 0)
-            {
-                containerDataList.Add(new FrameContainerData<T>(counter, frame, element));
-                counter++;
-            }
-
+            if (IsContainerEmpty)
+                AddNewFrameContainer(frame, element);
             else
-            {
-                FrameContainerData<T> lastElement = GetLastElement();
+                UpdateFrameRecord(frame, element);
+        }
 
-                if (Equals(lastElement.ContainerElement, element))
-                {
-                    lastElement.SetFrame(frame);
-                    lastElement.SetContainerElement(element);
-                    containerDataList[counter - 1] = lastElement;
-                }
-                else
-                {
-                    containerDataList.Add(new FrameContainerData<T>(counter, frame, element));
-                    counter++;
-                }
+        private bool IsContainerEmpty => containerDataList.Count == 0;
+
+        private void UpdateFrameRecord(int frame, T element)
+        {
+            FrameContainerData<T> lastElement = GetLastElement();
+
+            if (AreRecordsEquals(lastElement.ContainerElement, element))
+            {
+                lastElement.SetFrameAndContainer(frame, element);
+                containerDataList[counter - 1] = lastElement;
             }
+            else
+                AddNewFrameContainer(frame, element);
+        }
+
+        private bool AreRecordsEquals(T first, T second) => Equals(first, second);
+
+        private void AddNewFrameContainer(int frame, T element)
+        {
+            containerDataList.Add(new FrameContainerData<T>(counter, frame, element));
+            counter++;
         }
 
         public T GetRewind(int frame, bool frameByFrame) => frameByFrame ? GetRewindFrameByFrame(frame) : GetRewind(frame);

@@ -14,7 +14,13 @@ namespace TimeReverse
             ContainerElement = containerElement;
         }
 
-        public void SetFrame(int frame) => Frame = frame;
-        public void SetContainerElement(T containerElement) => ContainerElement = containerElement;
+        public void SetFrameAndContainer(int frame, T containerElement)
+        {
+            SetFrame(frame);
+            SetContainerElement(containerElement);
+        }
+
+        private void SetFrame(int frame) => Frame = frame;
+        private void SetContainerElement(T containerElement) => ContainerElement = containerElement;
     }
 }

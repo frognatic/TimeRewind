@@ -7,14 +7,21 @@ namespace TimeReverse
 {
     public class TimeReverseController : MonoSingleton<TimeReverseController>
     {
+        #region Events
+        
         public static event Action<int> OnFrameUpdateAction;
         public static event Action<int, int> OnFrameRewindAction;
+        public static event Action OnStartRecording;
         public static event Action OnStopRecording;
-    
+        public static event Action OnPlayRewind;
+        public static event Action OnPauseRewind;
+        
+        #endregion
+        
         private List<TimeRecorder> timeRecorders = new();
 
-        private float rewindFrames;
-        private int currentFrame;
+        private float currentRewindFrames;
+        private int totalRecordedFrames;
 
         public int RecordedFrames { get; private set; }
 
@@ -71,11 +78,11 @@ namespace TimeReverse
             DecreaseFramesToRewindBySpeed();
         }
 
-        private bool IsRewindFinished() => rewindFrames <= 0;
+        private bool IsRewindFinished() => currentRewindFrames <= 0;
     
         private void RestoredFrames()
         {
-            int frames = GetAllRewindFrames;
+            int frames = Mathf.CeilToInt(currentRewindFrames);
             
             foreach (ITimeRewinder recorder in timeRecorders) 
                 recorder.RewindFrame(frames);
@@ -88,12 +95,12 @@ namespace TimeReverse
             foreach (ITimeRewinder recorder in timeRecorders) 
                 recorder.RewindFrame(frame, frameByFrame: true);
 
-            currentFrame = frame;
+            currentRewindFrames = frame;
             
             OnFrameRewindAction?.Invoke(frame, RecordedFrames);
         }
 
-        private void DecreaseFramesToRewindBySpeed() => rewindFrames -= RewindSpeed;
+        private void DecreaseFramesToRewindBySpeed() => currentRewindFrames -= RewindSpeed;
 
         #region UI Calls
 
@@ -111,12 +118,15 @@ namespace TimeReverse
                 recorder.StartRecording();
 
             ResetRecordingStatus();
+            StopRewind();
+            
+            OnStartRecording?.Invoke();
         }
 
         private void ResetRecordingStatus()
         {
             isRecording = true;
-            rewindFrames = 0;
+            currentRewindFrames = 0;
             RecordedFrames = 0;
         }
     
@@ -126,7 +136,7 @@ namespace TimeReverse
                 recorder.StopRecording();
         
             isRecording = false;
-            currentFrame = GetAllRewindFrames;
+            currentRewindFrames = GetAllRewindFrames;
             
             OnStopRecording?.Invoke();
         }
@@ -135,43 +145,55 @@ namespace TimeReverse
 
         public void GoToLastFrame()
         {
-            int frames = RecordedFrames;
+            int frames = GetAllRecordedFrames;
             SetToFrame(frames);
         }
 
         public void GoToPreviousFrame()
         {
-            currentFrame--;
-            SetToFrame(ClampRecordedFrame(currentFrame));
+            currentRewindFrames--;
+            SetToFrame((int)ClampRecordedFrame(currentRewindFrames));
         }
 
         public void GoToNextFrame()
         {
-            currentFrame++;
-            SetToFrame(ClampRecordedFrame(currentFrame));
+            currentRewindFrames++;
+            SetToFrame((int)ClampRecordedFrame(currentRewindFrames));
         }
 
-        private int ClampRecordedFrame(int frame) => Mathf.Clamp(frame, 0, RecordedFrames - 1);
+        private float ClampRecordedFrame(float frame) => Mathf.Clamp(frame, 0, GetAllRecordedFrames);
 
-        public void StartRewind()
+        public void Rewind()
+        {
+            if (isRewinding)
+                StopRewind();
+            else
+                StartRewind();
+        }
+        
+        private void StartRewind()
         {
             foreach (ITimeRewinder rewinder in timeRecorders) 
                 rewinder.StartRewind();
         
             isRewinding = true;
-            rewindFrames = RecordedFrames;
+            
+            OnPlayRewind?.Invoke();
         }
 
-        public void StopRewind()
+        private void StopRewind()
         {
             foreach (ITimeRewinder rewinder in timeRecorders) 
                 rewinder.PauseRewind();
         
             isRewinding = false;
+            
+            OnPauseRewind?.Invoke();
         }
 
         public void SetRewindSpeed(float speedToSet) => RewindSpeed = speedToSet;
-        private int GetAllRewindFrames => (int)(rewindFrames - 1);
+        private int GetAllRewindFrames => (int)(currentRewindFrames - 1);
+        private int GetAllRecordedFrames => RecordedFrames - 1;
 
         #endregion
     }
