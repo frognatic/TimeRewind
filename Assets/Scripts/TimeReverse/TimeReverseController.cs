@@ -78,7 +78,7 @@ namespace TimeReverse
             DecreaseFramesToRewindBySpeed();
         }
 
-        private bool IsRewindFinished() => currentRewindFrames <= 0;
+        private bool IsRewindFinished() => currentRewindFrames < 0;
     
         private void RestoredFrames()
         {
