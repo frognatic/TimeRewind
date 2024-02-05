@@ -72,10 +72,17 @@ namespace TimeReverse
 
         private void TryRewindFrames()
         {
-            if (!isRewinding || IsRewindFinished()) return;
+            if (!isRewinding) return;
         
             RestoredFrames();
             DecreaseFramesToRewindBySpeed();
+            CheckForStopRestoring();
+        }
+
+        private void CheckForStopRestoring()
+        {
+            if (IsRewindFinished())
+                StopRewind();
         }
 
         private bool IsRewindFinished() => currentRewindFrames < 0;
